@@ -1,0 +1,19 @@
+{
+  "clothing_items": [
+    {
+      "name": "90s Loose Jeans",
+      "description": "Our roomy, chilled-to-the-max throwback. It's a relaxed straight jean with an effortless slouch. Call it a vibe. We'll call it an essential. Fit: Relaxed through the hip & thigh with a loose, straight leg. Made with a longer inseam that stacks at your shoes. Fabric: 13 oz (369 g) rigid denim with 100% Regenerative Cotton. Stretch: No Stretch. Authentic rigid denim that gets better with every wear. Made to wear all day & break in over time. Look: A five-pocket distressed jean in a dark wash. Details: Button fly & five-pocket styling.",
+      "image_url": "https://www.gap.com/webcontent/0056/683/892/cn56683892.jpg"
+    },
+    {
+      "name": "Oxford Shirt",
+      "description": "A crisp classic that goes way beyond the 9-5. Smooth woven stretch cotton Oxford shirt. Button-down collar. Long sleeves with button cuffs. Button front. Patch pocket at chest. Assorted colors & prints.",
+      "image_url": "https://www.gap.com/webcontent/0054/585/512/cn54585512.jpg"
+    },
+    {
+      "name": "Baggy Denim Shorts",
+      "description": "The roomiest pair in your rotation. Extra loose, seriously cool & brings all the vibes. Fit: Extra roomy through the hip & thigh with a baggy, slightly tapered leg. Fabric: 100% Regenerative Cotton. Stretch: No Stretch. Authentic rigid denim that gets better with every wear. Made to wear all day & break in over time.​ Look: Five-pocket denim shorts in a black wash. Details: Zip fly & five-pocket styling.",
+      "image_url": "https://www.gap.com/webcontent/0059/850/962/cn59850962.jpg"
+    }
+  ]
+} 
