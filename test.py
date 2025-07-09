@@ -6,10 +6,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 fclip = FashionCLIP("fashion-clip")
 
 # GAP product
-imageA = Image.open("images/baggy_shorts.avif")
+imageA = Image.open("test_images/baggy_shorts.avif")
 text = "The roomiest pair in your rotation. Extra loose, seriously cool & brings all the vibes. Fit: Extra roomy through the hip & thigh with a baggy, slightly tapered leg. Fabric: 100% Regenerative Cotton. Stretch: No Stretch. Authentic rigid denim that gets better with every wear. Made to wear all day & break in over time.​ Look: Five-pocket denim shorts in a black wash. Details: Zip fly & five-pocket styling."
 
-imageB = Image.open("images/baggy_black.webp")
+imageB = Image.open("test_images/baggy_black.webp")
 
 # print("Image A mode:", imageA.mode, "size:", imageA.size)
 # print("Image B mode:", imageB.mode, "size:", imageB.size)
