@@ -40,16 +40,24 @@ def search_items(image, description=None):
 
     # Run similarity search
     D, I = faiss_index.search(query_emb, k=5)
+    items = []
 
     # Print results
     for score, idx in zip(D[0], I[0]):
         item = metadata[idx]
         print(f"{item['name']} — {item['image_path']} — score: {score:.4f}")
-        match = item["image_path"]
+        
+        items.append(item)
 
-        plt.imshow(Image.open(match).convert("RGB"))
-        plt.axis('off')  # Hide axis ticks
-        plt.title(f"{item['name']} (score: {score:.4f})")
-        plt.show()
+    return items
+
+
+
+
+
+        # plt.imshow(Image.open(match).convert("RGB"))
+        # plt.axis('off')  # Hide axis ticks
+        # plt.title(f"{item['name']} (score: {score:.4f})")
+        # plt.show()
 
 
