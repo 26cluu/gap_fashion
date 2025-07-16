@@ -69,6 +69,7 @@ function App() {
           alignItems: "center",
           padding: "2rem",
           textAlign: "center",
+          boxSizing: "border-box",
         }}
       >
         <h1>Welcome to Fitting Gap</h1>
@@ -94,19 +95,19 @@ function App() {
 
   // Main app page
   return (
-    <div style={{ padding: "2rem" }}>
+    <div style={{ padding: "2rem", boxSizing: "border-box" }}>
       <div
         style={{
-          maxWidth: 1500,
+          width: "100%",
           margin: "auto",
           padding: "2rem",
-          display: "grid",
-          gridTemplateColumns: "1fr 300px",
-          columnGap: "3rem",
+          display: "flex",
+          gap: "3rem",
+          boxSizing: "border-box",
         }}
       >
         {/* Left side: form + product recommendations */}
-        <div>
+        <div style={{ flex: 1 }}>
           <h1>Upload Your Inspiration Photo</h1>
           <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
             <input type="file" accept="image/*" onChange={handleFileChange} />
@@ -124,7 +125,8 @@ function App() {
                 style={{
                   display: "grid",
                   gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: "1.5rem",
+                  gap: "1rem",
+                  width: "100%"
                 }}
               >
                 {products.map((product, index) => {
@@ -156,18 +158,20 @@ function App() {
           )}
         </div>
 
-        {/* Right side: fixed size preview box */}
+        {/* Right side: preview box */}
         <div
           style={{
-            width: 500,
+            width: "500px",
+            flexShrink: 0, // Prevent shrinking
             overflow: "hidden",
             textAlign: "center",
             borderRadius: 8,
             boxShadow: "0 0 10px rgba(0,0,0,0.1)",
-            marginLeft: "25rem"
+            height: "fit-content",
+            marginLeft: "auto", // Push to the far right
           }}
         >
-          <h2>Preview</h2>
+          <h2>Photo</h2>
           <img
             src={previewUrl}
             alt="Preview"
@@ -185,4 +189,3 @@ function App() {
 }
 
 export default App;
-
