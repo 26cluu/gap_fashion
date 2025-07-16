@@ -45,8 +45,6 @@ def crop_images(path):
 
     for score, label, box in zip(results["scores"], results["labels"], results["boxes"]):
         category = model.config.id2label[label.item()]
-        print(category)
-
         # Handle comma-separated labels
         split_labels = [c.strip().lower() for c in category.split(",")]
 
