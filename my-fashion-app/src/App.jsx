@@ -1,17 +1,111 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { HiOutlineCamera } from "react-icons/hi";
 import defaultImage from "./assets/preview.png";
 import './index.css';
 
+function LoadingBar() {
+  return (
+    <div className="w-full h-1 bg-gray-200 relative overflow-hidden mb-4">
+      <div className="absolute inset-0 bg-blue-500 animate-loading-bar"></div>
+    </div>
+  );
+}
+
+function CameraCapture({ stream, stopCamera, onCapture }) {
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream]);
+
+  const takePhoto = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const photoUrl = URL.createObjectURL(blob);
+        onCapture(blob, photoUrl);
+        stopCamera();
+      }
+    }, "image/jpeg");
+  };
+
+  return (
+    <div className="camera-capture mb-6">
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        className="w-full rounded mb-2"
+        style={{ maxHeight: 400, objectFit: "contain" }}
+      />
+      <div className="flex gap-4 mb-4">
+        <button
+          onClick={takePhoto}
+          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+        >
+          Take Photo
+        </button>
+        <button
+          onClick={stopCamera}
+          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const BACKEND_URL = "http://localhost:8000";
+
+  const [cameraActive, setCameraActive] = useState(false);
+  const [stream, setStream] = useState(null);
+  const [error, setError] = useState(null);
+
+  const startCamera = async () => {
+    setError(null);
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setStream(mediaStream);
+      setCameraActive(true);
+    } catch (err) {
+      setError("Could not access camera");
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      setStream(null);
+    }
+    setCameraActive(false);
+  };
 
   const [started, setStarted] = useState(false);
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(defaultImage);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [expandedIndex, setExpandedIndex] = useState(null);
+
+  const handleCameraCapture = (blob, url) => {
+    setFile(new File([blob], "camera-photo.jpg", { type: blob.type }));
+    setPreviewUrl(url);
+  };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -46,6 +140,7 @@ function App() {
       setFile(droppedFile);
       setPreviewUrl(URL.createObjectURL(droppedFile));
       e.dataTransfer.clearData();
+      setExpandedIndex(null);
     }
   };
 
@@ -60,6 +155,7 @@ function App() {
     setLoading(true);
     setError(null);
     setProducts([]);
+    setExpandedIndex(null);
 
     const formData = new FormData();
     formData.append("file", file);
@@ -85,10 +181,8 @@ function App() {
 
   if (!started) {
     return (
-      <div
-        className="h-screen w-screen flex flex-col justify-center items-center p-8 text-center box-border"
-      >
-        <h1 className="text-4xl font-bold mb-4">Welcome to Fitting Gap</h1>
+      <div className="h-screen w-screen flex flex-col justify-center items-center p-8 text-center box-border">
+        <h1 className="text-8xl font-bold mb-4">Welcome to Fitting Gap</h1>
         <p className="mb-8">Find recommended outfits based on your uploaded inspiration photo.</p>
         <button
           onClick={() => setStarted(true)}
@@ -101,34 +195,55 @@ function App() {
   }
 
   return (
-    <div className="p-8 box-border w-screen h-screen">
-      <div className="flex gap-12 mx-auto box-border" style={{ maxWidth: "1200px" }}>
+    <div className="p-16 box-border w-screen h-screen overflow-auto">
+      <div className="flex gap-6 mx-auto box-border">
         <div className="flex-1">
           <h1 className="text-3xl font-semibold mb-6">Upload Your Inspiration Photo</h1>
 
-          <div
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            onClick={() => document.getElementById("fileInput").click()}
-            className={`
-              relative group cursor-pointer rounded-lg border-2 border-dashed
-              transition-colors duration-300 mb-4
-              ${isDragging ? "border-gray-800 bg-gray-100" : "border-gray-300 bg-transparent"}
-              hover:bg-gray-600
-            `}
-          >
-            <p className="p-8 text-center">
-              {file ? file.name : "Drag and drop an image here, or click to browse."}
-            </p>
-            <input
-              id="fileInput"
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="hidden"
-            />
+          <div className="flex items-center gap-6 mb-4">
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => document.getElementById("fileInput").click()}
+              className={`
+                flex-1 relative cursor-pointer rounded-lg border-2 border-dashed
+                transition-colors duration-300 p-4
+                ${isDragging ? "border-gray-800 bg-gray-100" : "border-gray-300 bg-transparent"}
+                hover:bg-gray-300
+              `}
+            >
+              <p className="text-center">
+                {file ? file.name : "Drag and drop an image here, or click to browse."}
+              </p>
+              <input
+                id="fileInput"
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </div>
+
+            {!cameraActive && (
+              <button
+                onClick={startCamera}
+                className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                aria-label="Open Camera"
+                title="Open Camera"
+              >
+                <HiOutlineCamera className="h-6 w-6" />
+              </button>
+            )}
           </div>
+
+          {cameraActive && (
+            <CameraCapture
+              stream={stream}
+              stopCamera={stopCamera}
+              onCapture={handleCameraCapture}
+            />
+          )}
 
           <form onSubmit={handleSubmit} className="mb-8">
             <button
@@ -140,6 +255,8 @@ function App() {
             </button>
           </form>
 
+          {loading && <LoadingBar />}
+
           {error && <p className="text-red-600 mb-4">{error}</p>}
 
           {products.length > 0 && (
@@ -147,21 +264,45 @@ function App() {
               <h2 className="text-2xl font-semibold mb-4">Recommended Products</h2>
               <div className="grid grid-cols-3 gap-4 w-full">
                 {products.map((product, index) => {
+                  const isExpanded = expandedIndex === index;
                   const imageUrl = `${BACKEND_URL}/${product.image_path.replace(/\\/g, "/")}`;
+
+                  const priceText = product.price || "";
+                  const originalPriceMatch = priceText.match(/Original Price:\s*\$?([0-9.,]+)/i);
+                  const currentPriceMatch = priceText.match(/Current Price:\s*\$?([0-9.,]+)/i);
+
+                  const originalPrice = originalPriceMatch ? originalPriceMatch[1] : "";
+                  const currentPrice = currentPriceMatch ? currentPriceMatch[1] : "";
+
                   return (
                     <div
                       key={index}
-                      className="border border-gray-300 p-4 rounded-md text-left"
+                      className="rounded-md text-left cursor-pointer select-none"
+                      onClick={() => setExpandedIndex(isExpanded ? null : index)}
                     >
-                      <strong>{product.name}</strong>
-                      <p className="whitespace-pre-line">{product.price}</p>
-                      <p className="whitespace-pre-line">{product.description}</p>
                       <img
                         src={imageUrl}
                         alt={product.name}
-                        width={150}
-                        className="rounded mt-2"
+                        className="rounded-2xl mt-2 w-full object-contain"
                       />
+                      <p className="block mt-2 font-bold">{product.name}</p>
+
+                      <div className="flex items-center gap-2 text-sm text-gray-700 my-1">
+                        {originalPrice && (
+                          <span className="text-gray-500">
+                            <span className="line-through">${originalPrice}</span>
+                          </span>
+                        )}
+                        {currentPrice && (
+                          <span className="font-semibold text-black">
+                            ${currentPrice}
+                          </span>
+                        )}
+                      </div>
+
+                      {isExpanded && (
+                        <p className="whitespace-pre-line mt-2">{product.description}</p>
+                      )}
                     </div>
                   );
                 })}
@@ -170,9 +311,7 @@ function App() {
           )}
         </div>
 
-        <div
-          className="w-[500px] flex-shrink-0 overflow-hidden text-center rounded-lg shadow-md h-fit ml-auto"
-        >
+        <div className="w-[500px] flex-shrink-0 overflow-hidden text-center rounded-lg shadow-md h-fit">
           <h2 className="text-2xl font-semibold mb-4">Photo</h2>
           <img
             src={previewUrl}
