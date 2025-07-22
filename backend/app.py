@@ -1,5 +1,5 @@
-from backend.cropper import crop_images
-from backend.search import search_items_batch  # Import the batch function
+from cropper import crop_images
+from search import search_items_batch  # Import the batch function
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
