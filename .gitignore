@@ -1,5 +1,4 @@
 environment/
 env/
-my-fashion-app/node_modules/
+frontend/node_modules/
 __pycache__/
-gap_images/
