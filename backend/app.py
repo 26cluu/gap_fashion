@@ -13,7 +13,7 @@ app.mount("/gap_images", StaticFiles(directory="gap_images"), name="gap_images")
 # ✅ Allow React frontend (localhost:3000) to access this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # React dev server
+    allow_origins=["*"],  # React dev server
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
