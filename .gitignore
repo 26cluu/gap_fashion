@@ -3,3 +3,5 @@ env/
 my-fashion-app/node_modules/
 __pycache__/
 gap_images/
+backend/gap_images/
+backend/test_images
