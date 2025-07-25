@@ -69,11 +69,19 @@ function CameraCapture({ stream, stopCamera, onCapture }) {
 }
 
 function App() {
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+  const BACKEND_URL = "http://localhost:8000";
 
   const [cameraActive, setCameraActive] = useState(false);
   const [stream, setStream] = useState(null);
   const [error, setError] = useState(null);
+  const [started, setStarted] = useState(false);
+  const [file, setFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(defaultImage);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [expandedIndex, setExpandedIndex] = useState(null);
+  const [description, setDescription] = useState(""); // 👈 description state
 
   const startCamera = async () => {
     setError(null);
@@ -93,14 +101,6 @@ function App() {
     }
     setCameraActive(false);
   };
-
-  const [started, setStarted] = useState(false);
-  const [file, setFile] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(defaultImage);
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [expandedIndex, setExpandedIndex] = useState(null);
 
   const handleCameraCapture = (blob, url) => {
     setFile(new File([blob], "camera-photo.jpg", { type: blob.type }));
@@ -147,8 +147,8 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!file) {
-      alert("Please select an image before submitting.");
+    if (!file && !description.trim()) {
+      alert("Please provide either an image or a description.");
       return;
     }
 
@@ -158,7 +158,11 @@ function App() {
     setExpandedIndex(null);
 
     const formData = new FormData();
-    formData.append("file", file);
+    if (file){
+      formData.append("file", file);
+    }
+
+    formData.append("description", description); // 👈 include description
 
     try {
       const response = await fetch(`${BACKEND_URL}/upload-image/`, {
@@ -182,7 +186,7 @@ function App() {
   if (!started) {
     return (
       <div className="h-screen w-screen flex flex-col justify-center items-center p-8 text-center box-border">
-        <h1 className="text-8xl font-bold mb-4">Welcome to Fitting Gap</h1>
+        <h1 className="text-8xl font-bold mb-4">Welcome to FittinGap</h1>
         <p className="mb-8">Find recommended outfits based on your uploaded inspiration photo.</p>
         <button
           onClick={() => setStarted(true)}
@@ -245,7 +249,22 @@ function App() {
             />
           )}
 
+          {/* FORM: Image + Description */}
           <form onSubmit={handleSubmit} className="mb-8">
+            <div className="mb-4">
+              <label htmlFor="description" className="block font-medium mb-1">
+                Optional Description
+              </label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe your inspiration (e.g. 'flowy floral summer dress')"
+                className="w-full p-2 border border-gray-300 rounded-md resize-none"
+                rows={3}
+              />
+            </div>
+
             <button
               type="submit"
               disabled={loading}
@@ -325,3 +344,4 @@ function App() {
 }
 
 export default App;
+

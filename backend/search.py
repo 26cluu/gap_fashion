@@ -87,48 +87,58 @@ def search_items(image, description=None):
 import torch
 from PIL import Image
 
-def search_items_batch(images, descriptions=None):
-    """Process multiple images at once for better efficiency"""
+def search_items_batch(images=None, descriptions=None):
+    """Search using image embeddings, text embeddings, or both (averaged)."""
     load_models_and_data()
-    
+
     fclip = _fclip
     faiss_index = _faiss_index
     metadata = _metadata
-    
-    # Resize images to 224x224 (simple resize)
-    query_imgs = [img.convert("RGB").resize((224, 224)) for img in images]
-    
-    with torch.no_grad():
-        query_img_embs = fclip.encode_images(query_imgs, batch_size=len(query_imgs))
-    
+
+    # Safety fallback if both inputs are None
+    if not images and not descriptions:
+        raise ValueError("At least one of 'images' or 'descriptions' must be provided.")
+
     results = []
-    
-    for i, query_img_emb in enumerate(query_img_embs):
-        query_emb = query_img_emb
+    query_img_embs = []
+    query_txt_embs = []
 
-        if descriptions and i < len(descriptions) and descriptions[i]:
-            with torch.no_grad():
-                query_txt_emb = fclip.encode_text([descriptions[i]], batch_size=1)
-            query_emb = (query_img_emb + query_txt_emb) * 0.5
-            query_emb = query_emb / np.linalg.norm(query_emb)
-            query_emb = query_emb.astype("float32")
+    # Process image embeddings if provided
+    if images:
+        query_imgs = [img.convert("RGB").resize((224, 224)) for img in images]
+        with torch.no_grad():
+            query_img_embs = fclip.encode_images(query_imgs, batch_size=len(query_imgs))
+
+    # Process text embeddings if provided
+    if descriptions:
+        with torch.no_grad():
+            query_txt_embs = fclip.encode_text(descriptions, batch_size=len(descriptions))
+
+    num_queries = max(len(query_img_embs), len(query_txt_embs))
+
+    for i in range(num_queries):
+        has_image = i < len(query_img_embs)
+        has_text = i < len(query_txt_embs)
+
+        if has_image and has_text:
+            # Combine image + text
+            emb = (query_img_embs[i] + query_txt_embs[i]) * 0.5
+        elif has_image:
+            emb = query_img_embs[i]
+        elif has_text:
+            emb = query_txt_embs[i]
         else:
-            # No description given, just normalize query_img_emb if needed
-            query_emb = query_img_emb / np.linalg.norm(query_img_emb)
-            query_emb = query_emb.astype("float32")
+            continue  # Skip if no embedding available (shouldn't happen)
 
-        # Search in FAISS index
-        D, I = faiss_index.search(query_emb.reshape(1, -1), k=5)
+        emb = emb / np.linalg.norm(emb)
+        emb = emb.astype("float32")
 
-        items = []
-        for score, idx in zip(D[0], I[0]):
-            item = metadata[idx]
-            items.append(item)
-
+        D, I = faiss_index.search(emb.reshape(1, -1), k=5)
+        items = [metadata[idx] for score, idx in zip(D[0], I[0])]
         results.append(items)
 
-    
     return results
+
 
 
 

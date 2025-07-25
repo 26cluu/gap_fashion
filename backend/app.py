@@ -1,6 +1,6 @@
 from cropper import crop_images
 from search import search_items_batch  # Import the batch function
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
@@ -28,37 +28,46 @@ def read_root():
     return {"message": "FastAPI is ready for React!"}
 
 # --- Optimized Image Upload Endpoint with Batch Processing ---
+
 @app.post("/upload-image/")
-async def upload_image(file: UploadFile = File(...)):
-    file_location = os.path.join(UPLOAD_DIR, file.filename)
-    
-    # Save the uploaded image
-    with open(file_location, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    # Get cropped images - format: (x, y, image)
-    cropped_images = crop_images(file_location)
-    
-    # Extract just the images (at index 2) for batch processing
-    images = [cropped_image[2] for cropped_image in cropped_images]
-    
-    # Use batch processing for all images at once
-    batch_results = search_items_batch(images)
-    
-    # Flatten results and fix image paths
+async def upload_image(
+    file: UploadFile = File(None),
+    description: str = Form(None)  # Accept description optionally
+):
+    images = None
+    file_location = None
+
+    if file is not None:
+        file_location = os.path.join(UPLOAD_DIR, file.filename)
+
+        # Save the uploaded image
+        with open(file_location, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # Crop and process
+        cropped_images = crop_images(file_location)
+        images = [crop[2] for crop in cropped_images]
+
+    # Call search with images if available, plus description
+    batch_results = search_items_batch(
+        images=images,
+        descriptions=[description] if description else None
+    )
+
+    # Clean up product image paths
     products = []
     for found_products in batch_results:
         for product in found_products:
-            # Fix Windows path separators
             product["image_path"] = product["image_path"].replace("\\", "/")
         products.extend(found_products)
-    
+
     return JSONResponse(content={
-        "filename": file.filename,
+        "filename": file.filename if file else None,
         "message": "Upload successful",
         "file_path": file_location,
         "product": products
     })
+
 
 # --- Alternative endpoint with detailed crop information ---
 @app.post("/upload-image-detailed/")
@@ -111,7 +120,7 @@ if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         "app:app",
-        host="0.0.0.0",
+        host="127.0.0.1",
         port=int(os.environ.get("PORT", 8000)),
-        reload=False
+        reload=True
     )
