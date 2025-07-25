@@ -42,4 +42,3 @@ def crop_images(path):
 
 
 
-
