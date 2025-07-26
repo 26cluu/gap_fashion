@@ -165,7 +165,7 @@ function App() {
     formData.append("description", description); // 👈 include description
 
     try {
-      const response = await fetch(`${BACKEND_URL}/upload-image/`, {
+      const response = await fetch(`${BACKEND_URL}/api/upload-image/`, {
         method: "POST",
         body: formData,
       });
