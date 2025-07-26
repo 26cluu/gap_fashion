@@ -69,7 +69,7 @@ function CameraCapture({ stream, stopCamera, onCapture }) {
 }
 
 function App() {
-  const BACKEND_URL = "http://localhost:8000";
+  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
   const [cameraActive, setCameraActive] = useState(false);
   const [stream, setStream] = useState(null);

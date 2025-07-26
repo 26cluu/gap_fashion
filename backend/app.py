@@ -69,58 +69,11 @@ async def upload_image(
     })
 
 
-# --- Alternative endpoint with detailed crop information ---
-@app.post("/upload-image-detailed/")
-async def upload_image_detailed(file: UploadFile = File(...)):
-    file_location = os.path.join(UPLOAD_DIR, file.filename)
-    
-    # Save the uploaded image
-    with open(file_location, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    # Get cropped images - format: (x, y, image)
-    cropped_images = crop_images(file_location)
-    
-    # Extract just the images for batch processing
-    images = [cropped_image[2] for cropped_image in cropped_images]
-    
-    # Use batch processing
-    batch_results = search_items_batch(images)
-    
-    # Build detailed response with crop coordinates
-    detailed_results = []
-    for i, (x, y, image) in enumerate(cropped_images):
-        found_products = batch_results[i]
-        
-        # Fix image paths
-        for product in found_products:
-            product["image_path"] = product["image_path"].replace("\\", "/")
-        
-        detailed_results.append({
-            "crop_x": x,
-            "crop_y": y,
-            "crop_index": i,
-            "products": found_products
-        })
-    
-    # Also create flattened list for backward compatibility
-    all_products = []
-    for result in detailed_results:
-        all_products.extend(result["products"])
-    
-    return JSONResponse(content={
-        "filename": file.filename,
-        "message": "Upload successful",
-        "file_path": file_location,
-        "product": all_products,  # Backward compatibility
-        "detailed_results": detailed_results  # New detailed format
-    })
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         "app:app",
         host="127.0.0.1",
         port=int(os.environ.get("PORT", 8000)),
-        reload=True
+        reload=False
     )
