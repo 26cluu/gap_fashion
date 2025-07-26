@@ -50,16 +50,16 @@ function CameraCapture({ stream, stopCamera, onCapture }) {
         className="w-full rounded mb-2"
         style={{ maxHeight: 400, objectFit: "contain" }}
       />
-      <div className="flex gap-4 mb-4">
+      <div className="flex flex-col sm:flex-row gap-4 mb-4">
         <button
           onClick={takePhoto}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
         >
           Take Photo
         </button>
         <button
           onClick={stopCamera}
-          className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          className="w-full sm:w-auto px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
         >
           Cancel
         </button>
@@ -81,7 +81,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState(null);
-  const [description, setDescription] = useState(""); // 👈 description state
+  const [description, setDescription] = useState("");
 
   const startCamera = async () => {
     setError(null);
@@ -161,8 +161,7 @@ function App() {
     if (file){
       formData.append("file", file);
     }
-
-    formData.append("description", description); // 👈 include description
+    formData.append("description", description);
 
     try {
       const response = await fetch(`${BACKEND_URL}/api/upload-image/`, {
@@ -185,12 +184,12 @@ function App() {
 
   if (!started) {
     return (
-      <div className="h-screen w-screen flex flex-col justify-center items-center p-8 text-center box-border">
-        <h1 className="text-8xl font-bold mb-4">Welcome to FittinGap</h1>
-        <p className="mb-8">Find recommended outfits based on your uploaded inspiration photo.</p>
+      <div className="h-screen w-screen flex flex-col justify-center items-center p-6 text-center">
+        <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold mb-4">Welcome to FittinGap</h1>
+        <p className="mb-8 text-base sm:text-lg">Find recommended outfits based on your uploaded inspiration photo.</p>
         <button
           onClick={() => setStarted(true)}
-          className="px-8 py-3 text-xl rounded-lg bg-gray-900 text-white hover:bg-gray-700 transition-colors duration-300"
+          className="px-6 py-3 text-lg sm:text-xl rounded-lg bg-gray-900 text-white hover:bg-gray-700 transition-colors duration-300"
         >
           Get Started
         </button>
@@ -199,25 +198,20 @@ function App() {
   }
 
   return (
-    <div className="p-16 box-border w-screen h-screen overflow-auto">
-      <div className="flex gap-6 mx-auto box-border">
+    <div className="p-4 sm:p-8 lg:p-16 box-border w-screen h-screen overflow-auto">
+      <div className="flex flex-col lg:flex-row gap-6 mx-auto">
         <div className="flex-1">
-          <h1 className="text-3xl font-semibold mb-6">Upload Your Inspiration Photo</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-6">Upload Your Inspiration Photo</h1>
 
-          <div className="flex items-center gap-6 mb-4">
+          <div className="flex items-center gap-4 flex-col sm:flex-row mb-4">
             <div
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={() => document.getElementById("fileInput").click()}
-              className={`
-                flex-1 relative cursor-pointer rounded-lg border-2 border-dashed
-                transition-colors duration-300 p-4
-                ${isDragging ? "border-gray-800 bg-gray-100" : "border-gray-300 bg-transparent"}
-                hover:bg-gray-300
-              `}
+              className={`w-full sm:flex-1 relative cursor-pointer rounded-lg border-2 border-dashed transition-colors duration-300 p-4 ${isDragging ? "border-gray-800 bg-gray-100" : "border-gray-300 bg-transparent"} hover:bg-gray-300`}
             >
-              <p className="text-center">
+              <p className="text-center text-sm sm:text-base">
                 {file ? file.name : "Drag and drop an image here, or click to browse."}
               </p>
               <input
@@ -249,7 +243,6 @@ function App() {
             />
           )}
 
-          {/* FORM: Image + Description */}
           <form onSubmit={handleSubmit} className="mb-8">
             <div className="mb-4">
               <label htmlFor="description" className="block font-medium mb-1">
@@ -268,7 +261,7 @@ function App() {
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition-colors duration-300"
+              className="w-full sm:w-auto px-6 py-2 text-base bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition-colors duration-300"
             >
               {loading ? "Uploading..." : "Get Recommendations"}
             </button>
@@ -276,12 +269,12 @@ function App() {
 
           {loading && <LoadingBar />}
 
-          {error && <p className="text-red-600 mb-4">{error}</p>}
+          {error && <p className="text-red-600 mb-4 text-sm">{error}</p>}
 
           {products.length > 0 && (
             <>
-              <h2 className="text-2xl font-semibold mb-4">Recommended Products</h2>
-              <div className="grid grid-cols-3 gap-4 w-full">
+              <h2 className="text-xl sm:text-2xl font-semibold mb-4">Recommended Products</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
                 {products.map((product, index) => {
                   const isExpanded = expandedIndex === index;
                   const imageUrl = `${BACKEND_URL}/${product.image_path.replace(/\\/g, "/")}`;
@@ -304,7 +297,7 @@ function App() {
                         alt={product.name}
                         className="rounded-2xl mt-2 w-full object-contain"
                       />
-                      <p className="block mt-2 font-bold">{product.name}</p>
+                      <p className="block mt-2 font-bold text-sm sm:text-base">{product.name}</p>
 
                       <div className="flex items-center gap-2 text-sm text-gray-700 my-1">
                         {originalPrice && (
@@ -320,7 +313,7 @@ function App() {
                       </div>
 
                       {isExpanded && (
-                        <p className="whitespace-pre-line mt-2">{product.description}</p>
+                        <p className="whitespace-pre-line mt-2 text-sm">{product.description}</p>
                       )}
                     </div>
                   );
@@ -330,8 +323,8 @@ function App() {
           )}
         </div>
 
-        <div className="w-[500px] flex-shrink-0 overflow-hidden text-center rounded-lg shadow-md h-fit">
-          <h2 className="text-2xl font-semibold mb-4">Photo</h2>
+        <div className="w-full max-w-md mx-auto lg:w-[500px] flex-shrink-0 overflow-hidden text-center rounded-lg shadow-md h-fit">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-4">Photo</h2>
           <img
             src={previewUrl}
             alt="Preview"
@@ -344,4 +337,5 @@ function App() {
 }
 
 export default App;
+
 
