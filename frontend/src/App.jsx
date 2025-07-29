@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { HiOutlineCamera } from "react-icons/hi";
+import { PiCoatHangerBold } from "react-icons/pi";
 import defaultImage from "./assets/preview.png";
 import './index.css';
 
@@ -74,7 +75,6 @@ function App() {
   const [cameraActive, setCameraActive] = useState(false);
   const [stream, setStream] = useState(null);
   const [error, setError] = useState(null);
-  const [started, setStarted] = useState(false);
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(defaultImage);
   const [products, setProducts] = useState([]);
@@ -82,6 +82,31 @@ function App() {
   const [isDragging, setIsDragging] = useState(false);
   const [expandedIndex, setExpandedIndex] = useState(null);
   const [description, setDescription] = useState("");
+
+  // Fade effect states
+  const [started, setStarted] = useState(false);
+  const [fadeOut, setFadeOut] = useState(false);
+  const [showMain, setShowMain] = useState(false);
+  const [mainFadeIn, setMainFadeIn] = useState(false);
+
+  // Start fade out then show main page
+  const handleStartClick = () => {
+    setFadeOut(true);
+    setTimeout(() => {
+      setShowMain(true);
+      setStarted(true);
+    }, 500);
+  };
+
+  // Trigger main page fade in when shown
+  useEffect(() => {
+    if (showMain) {
+      // small delay to ensure div mounted
+      setTimeout(() => {
+        setMainFadeIn(true);
+      }, 50);
+    }
+  }, [showMain]);
 
   const startCamera = async () => {
     setError(null);
@@ -158,7 +183,7 @@ function App() {
     setExpandedIndex(null);
 
     const formData = new FormData();
-    if (file){
+    if (file) {
       formData.append("file", file);
     }
     formData.append("description", description);
@@ -182,13 +207,25 @@ function App() {
     }
   };
 
-  if (!started) {
+  // Show Welcome screen if main not shown yet
+  if (!showMain) {
     return (
-      <div className="h-screen w-screen flex flex-col justify-center items-center p-6 text-center">
-        <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold mb-4">Welcome to FittinGap</h1>
-        <p className="mb-8 text-base sm:text-lg">Find recommended outfits based on your uploaded inspiration photo.</p>
+      <div
+        className={`h-screen w-screen flex flex-col justify-center items-center p-6 text-center transition-opacity duration-250 ${
+          fadeOut ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        <PiCoatHangerBold size={80} />
+        <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold mb-4">
+          Welcome to{" "}
+          <span className="text-black">Fittin</span>
+          <span className="text-blue-900">Gap</span>
+        </h1>
+        <p className="mb-8 text-base sm:text-lg">
+          Find recommended outfits based on your uploaded inspiration photo.
+        </p>
         <button
-          onClick={() => setStarted(true)}
+          onClick={handleStartClick}
           className="px-6 py-3 text-lg sm:text-xl rounded-lg bg-gray-900 text-white hover:bg-gray-700 transition-colors duration-300"
         >
           Get Started
@@ -197,11 +234,18 @@ function App() {
     );
   }
 
+  // Main page with fade-in effect
   return (
-    <div className="p-4 sm:p-8 lg:p-16 box-border w-screen h-screen overflow-auto">
+    <div
+      className={`p-4 sm:p-8 lg:p-16 box-border w-screen h-screen overflow-auto transition-opacity duration-500 ${
+        mainFadeIn ? "opacity-100" : "opacity-0"
+      }`}
+    >
       <div className="flex flex-col lg:flex-row gap-6 mx-auto">
         <div className="flex-1">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-6">Upload Your Inspiration Photo</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6">
+            Upload Your Inspiration Photo
+          </h1>
 
           <div className="flex items-center gap-4 flex-col sm:flex-row mb-4">
             <div
@@ -209,7 +253,9 @@ function App() {
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               onClick={() => document.getElementById("fileInput").click()}
-              className={`w-full sm:flex-1 relative cursor-pointer rounded-lg border-2 border-dashed transition-colors duration-300 p-4 ${isDragging ? "border-gray-800 bg-gray-100" : "border-gray-300 bg-transparent"} hover:bg-gray-300`}
+              className={`w-full sm:flex-1 relative cursor-pointer rounded-lg border-2 border-dashed transition-colors duration-300 p-4 ${
+                isDragging ? "border-gray-800 bg-gray-100" : "border-gray-300 bg-transparent"
+              } hover:bg-gray-300`}
             >
               <p className="text-center text-sm sm:text-base">
                 {file ? file.name : "Drag and drop an image here, or click to browse."}
@@ -226,7 +272,7 @@ function App() {
             {!cameraActive && (
               <button
                 onClick={startCamera}
-                className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                className="p-2 bg-black text-white rounded hover:bg-blue-900"
                 aria-label="Open Camera"
                 title="Open Camera"
               >
@@ -236,11 +282,7 @@ function App() {
           </div>
 
           {cameraActive && (
-            <CameraCapture
-              stream={stream}
-              stopCamera={stopCamera}
-              onCapture={handleCameraCapture}
-            />
+            <CameraCapture stream={stream} stopCamera={stopCamera} onCapture={handleCameraCapture} />
           )}
 
           <form onSubmit={handleSubmit} className="mb-8">
@@ -258,18 +300,37 @@ function App() {
               />
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full sm:w-auto px-6 py-2 text-base bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-300 transition-colors duration-300"
-            >
-              {loading ? "Uploading..." : "Get Recommendations"}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-2 items-center">
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full sm:w-auto px-6 py-2 text-base bg-blue-900 text-white rounded-md hover:bg-blue-950 disabled:bg-blue-900 transition-colors duration-300"
+              >
+                {loading ? "Uploading..." : "Get Recommendations"}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setFile(null);
+                  setPreviewUrl(defaultImage);
+                  setDescription("");
+                }}
+                disabled={loading}
+                className="w-full sm:w-auto px-6 py-2 text-base bg-black text-white rounded-md hover:bg-gray-500 disabled:bg-gray-500 transition-colors duration-300"
+              >
+                Clear Photo
+              </button>
+            </div>
           </form>
 
           {loading && <LoadingBar />}
 
-          {error && <p className="text-red-600 mb-4 text-sm">{error}</p>}
+          {error && (
+            <p className="text-red-600 mb-4 text-sm">
+              {error}
+            </p>
+          )}
 
           {products.length > 0 && (
             <>
@@ -306,9 +367,7 @@ function App() {
                           </span>
                         )}
                         {currentPrice && (
-                          <span className="font-semibold text-black">
-                            ${currentPrice}
-                          </span>
+                          <span className="font-semibold text-black">${currentPrice}</span>
                         )}
                       </div>
 
@@ -325,11 +384,7 @@ function App() {
 
         <div className="w-full max-w-md mx-auto lg:w-[500px] flex-shrink-0 overflow-hidden text-center rounded-lg shadow-md h-fit">
           <h2 className="text-xl sm:text-2xl font-semibold mb-4">Photo</h2>
-          <img
-            src={previewUrl}
-            alt="Preview"
-            className="w-full h-auto object-contain rounded"
-          />
+          <img src={previewUrl} alt="Preview" className="w-full h-auto object-contain rounded" />
         </div>
       </div>
     </div>
@@ -337,5 +392,7 @@ function App() {
 }
 
 export default App;
+
+
 
 
